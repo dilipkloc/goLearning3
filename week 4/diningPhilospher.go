@@ -1,22 +1,23 @@
 package main
 
-import ("fmt"
-	"sync"
+import (
+	"fmt"
 	"math/rand"
-	"time")
+	"sync"
+	"time"
+)
 
-type ChopS struct{sync.Mutex}
+type ChopS struct{ sync.Mutex }
 
-type Philos struct{
+type Philos struct {
 	leftCS, rightCS *ChopS
-	name int
-	eaten int
+	name            int
+	eaten           int
 }
 
-func(p Philos) isHungry() bool {
+func (p Philos) isHungry() bool {
 	return p.eaten < 4
 }
-
 
 func eat(results chan<- int, p *Philos, num int) {
 	p.leftCS.Lock()
@@ -32,7 +33,6 @@ func eat(results chan<- int, p *Philos, num int) {
 	results <- num
 }
 
-
 func eatMore(philos []*Philos) bool {
 	for i := 0; i < len(philos); i++ {
 		if philos[i].isHungry() {
@@ -42,19 +42,17 @@ func eatMore(philos []*Philos) bool {
 	return false
 }
 
-
 func getRandom(philos []*Philos, eating int) int {
 	random := rand.Intn(len(philos))
 
 	for i := 0; i < len(philos); i++ {
-		if (philos[random].isHungry() && random != eating) {
+		if philos[random].isHungry() && random != eating {
 			return random
 		}
 		random = (random + 1) % len(philos)
 	}
 	return random
 }
-
 
 func host(philos []*Philos) {
 
@@ -69,28 +67,27 @@ func host(philos []*Philos) {
 		go eat(eaters, philos[random2], random2)
 		philos[random2].eaten = 1 + philos[random2].eaten
 
-		result := <- eaters
-		if (result == random1) {
+		result := <-eaters
+		if result == random1 {
 			random1 = random2
 		}
 	}
-	random1 = <- eaters
+	random1 = <-eaters
 	wg.Done()
 }
-	
 
 var wg sync.WaitGroup
 
-func main(){
+func main() {
 	CSticks := make([]*ChopS, 5)
-	for i:=0; i<5; i++ {
+	for i := 0; i < 5; i++ {
 		CSticks[i] = new(ChopS)
 	}
 	philos := make([]*Philos, 5)
-	for i:=0; i<5; i++{
-		philos[i] = &Philos{CSticks[i], CSticks[(i+1)%5],i+1,1}
+	for i := 0; i < 5; i++ {
+		philos[i] = &Philos{CSticks[i], CSticks[(i+1)%5], i + 1, 1}
 	}
-	
+
 	wg.Add(1)
 	go host(philos)
 	wg.Wait()
